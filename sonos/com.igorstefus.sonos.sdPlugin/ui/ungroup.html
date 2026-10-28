@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <script src="https://sdpi-components.dev/releases/v4/sdpi-components.js"></script>
+</head>
+<body>
+  <sdpi-item label="Speakers">
+    <sdpi-checkbox setting="all" label="All speakers"></sdpi-checkbox>
+  </sdpi-item>
+  <sdpi-item label="">
+    <sdpi-checkbox-list setting="speakers" datasource="speakers" loading="Looking for Sonos speakers…" hot-reload></sdpi-checkbox-list>
+  </sdpi-item>
+  <sdpi-item>
+    <small>Each ticked room leaves its group and plays on its own. One room is enough. All speakers splits every group. The key is green while a ticked room is still in a group.</small>
+  </sdpi-item>
+  <sdpi-item label="Speaker IP">
+    <sdpi-textfield setting="host" global placeholder="optional, e.g. 192.168.1.50"></sdpi-textfield>
+  </sdpi-item>
+  <sdpi-item>
+    <small>Only needed when no speakers show up above (multicast discovery blocked): the IP of any one Sonos speaker.</small>
+  </sdpi-item>
+</body>
+</html>

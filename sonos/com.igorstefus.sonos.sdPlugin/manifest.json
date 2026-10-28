@@ -1,0 +1,99 @@
+{
+  "Name": "Sonos",
+  "Version": "0.1.0.0",
+  "Author": "Igor Stefus",
+  "Description": "Control Sonos speakers on your network: play/pause, group and volume keys for the speakers you pick in each key's settings.",
+  "UUID": "com.igorstefus.sonos",
+  "Icon": "imgs/plugin/icon",
+  "CategoryIcon": "imgs/plugin/category-icon",
+  "Category": "Sonos",
+  "CodePath": "bin/plugin.js",
+  "SDKVersion": 2,
+  "Software": {
+    "MinimumVersion": "7.1"
+  },
+  "OS": [
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    },
+    {
+      "Platform": "mac",
+      "MinimumVersion": "12"
+    }
+  ],
+  "Nodejs": {
+    "Version": "20",
+    "Debug": "enabled"
+  },
+  "Actions": [
+    {
+      "Name": "Play / Pause",
+      "UUID": "com.igorstefus.sonos.playback",
+      "Icon": "imgs/actions/playback",
+      "Tooltip": "Play, pause, stop, next or previous on the speakers picked in the settings (one, several, or all). Toggle pauses when anything is playing, otherwise plays.",
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "ui/playback.html",
+      "States": [
+        {
+          "Image": "imgs/actions/playback-key",
+          "ShowTitle": false
+        }
+      ],
+      "UserTitleEnabled": false
+    },
+    {
+      "Name": "Group",
+      "UUID": "com.igorstefus.sonos.group",
+      "Icon": "imgs/actions/group",
+      "Tooltip": "Group the picked speakers so they play together, or split them up again. Toggle groups when they are apart and ungroups when they are together.",
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "ui/group.html",
+      "States": [
+        {
+          "Image": "imgs/actions/group-key",
+          "ShowTitle": false
+        }
+      ],
+      "UserTitleEnabled": false
+    },
+    {
+      "Name": "Ungroup",
+      "UUID": "com.igorstefus.sonos.ungroup",
+      "Icon": "imgs/actions/ungroup",
+      "Tooltip": "Each picked speaker leaves its group and plays on its own. One speaker is enough; All splits every group.",
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "ui/ungroup.html",
+      "States": [
+        {
+          "Image": "imgs/actions/ungroup-key",
+          "ShowTitle": false
+        }
+      ],
+      "UserTitleEnabled": false
+    },
+    {
+      "Name": "Volume",
+      "UUID": "com.igorstefus.sonos.volume",
+      "Icon": "imgs/actions/volume",
+      "Tooltip": "Volume up, down or mute for the picked speakers. On a Stream Deck + dial: turn for volume, press for mute.",
+      "Controllers": ["Keypad", "Encoder"],
+      "PropertyInspectorPath": "ui/volume.html",
+      "Encoder": {
+        "layout": "$B1",
+        "TriggerDescription": {
+          "Rotate": "Volume",
+          "Push": "Mute",
+          "Touch": "Mute"
+        }
+      },
+      "States": [
+        {
+          "Image": "imgs/actions/volume-key",
+          "ShowTitle": false
+        }
+      ],
+      "UserTitleEnabled": false
+    }
+  ]
+}

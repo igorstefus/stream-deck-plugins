@@ -444,6 +444,28 @@ export class SonosSystem {
     this.emit();
   }
 
+  /**
+   * One volume step for a key with several rooms: the `equalized` rooms all land on the same level
+   * (the quietest of them plus `delta`), while the `own` rooms keep their own level and just move by
+   * `delta`. A single room behaves like a plain relative step.
+   */
+  async adjustVolume(equalized: string[], own: string[], delta: number): Promise<void> {
+    const known = equalized.filter((u) => this.speaker(u));
+    if (known.some((u) => this.volume.get(u) === undefined)) {
+      await this.refreshState(known);
+    }
+    const levels = known.map((u) => this.volume.get(u)).filter((v): v is number => typeof v === "number");
+    const jobs: Promise<void>[] = [];
+    if (levels.length > 0) {
+      jobs.push(this.setVolume(known, Math.min(...levels) + delta));
+    }
+    const followers = own.filter((u) => this.speaker(u) && !known.includes(u));
+    if (followers.length > 0) {
+      jobs.push(this.setRelativeVolume(followers, delta));
+    }
+    await Promise.all(jobs);
+  }
+
   async setVolume(uuids: string[], value: number): Promise<void> {
     const v = Math.max(0, Math.min(100, Math.round(value)));
     await Promise.all(

@@ -12,7 +12,7 @@
       <option value="mute">Mute / Unmute</option>
     </sdpi-select>
   </sdpi-item>
-  <sdpi-item label="Step">
+  <sdpi-item label="Step" class="not-for-mute">
     <sdpi-range setting="step" default="2" min="1" max="20" step="1" showvalue></sdpi-range>
   </sdpi-item>
   <sdpi-item label="Speakers">
@@ -21,8 +21,11 @@
   <sdpi-item label="">
     <sdpi-checkbox-list setting="speakers" datasource="speakers" loading="Looking for Sonos speakers…" hot-reload></sdpi-checkbox-list>
   </sdpi-item>
-  <sdpi-item>
-    <small>Each press changes every ticked room by the step. The key shows the current volume (~ average when several rooms are ticked). On a Stream Deck + dial: turn for volume, press for mute.</small>
+  <sdpi-item label="Keep own level" class="not-for-mute">
+    <sdpi-checkbox-list setting="own" datasource="speakers" loading="Looking for Sonos speakers…" hot-reload></sdpi-checkbox-list>
+  </sdpi-item>
+  <sdpi-item class="not-for-mute">
+    <small>With several rooms on one key, each press sets them all to the same level: the quietest one plus or minus the step. Rooms ticked under Keep own level are not equalized; they keep their own level and move by the step along with the others. The key shows the level now and the level a press lands on, e.g. 10→12. On a Stream Deck + dial: turn for volume, press for mute.</small>
   </sdpi-item>
   <sdpi-item label="Speaker IP">
     <sdpi-textfield setting="host" global placeholder="optional, e.g. 192.168.1.50"></sdpi-textfield>
@@ -30,5 +33,14 @@
   <sdpi-item>
     <small>Only needed when no speakers show up above (multicast discovery blocked): the IP of any one Sonos speaker.</small>
   </sdpi-item>
+  <script>
+    // Step and Keep own level mean nothing for a mute key: hide them while Mute is selected.
+    const direction = document.querySelector('sdpi-select[setting="direction"]');
+    const update = () => {
+      const mute = direction.value === "mute";
+      document.querySelectorAll(".not-for-mute").forEach((el) => (el.hidden = mute));
+    };
+    setInterval(update, 250);
+  </script>
 </body>
 </html>

@@ -313,11 +313,38 @@ type VolumeSettings = TargetSettings & {
   direction?: "up" | "down" | "mute";
   /** Volume change per press / per dial tick, 1-20. */
   step?: number | string;
+  /** Rooms that keep their own level and just move by the step; every other targeted room is equalized. */
+  own?: string[];
 }
 
 function stepOf(s: VolumeSettings): number {
   const n = Number(s.step);
   return Number.isFinite(n) && n >= 1 ? Math.min(20, Math.round(n)) : 2;
+}
+
+/** Splits the key's rooms into the ones that get equalized and the ones that keep their own level. */
+function volumeGroups(s: VolumeSettings, uuids: string[]): { equalized: string[]; own: string[] } {
+  const own = new Set(Array.isArray(s.own) ? s.own : []);
+  return { equalized: uuids.filter((u) => !own.has(u)), own: uuids.filter((u) => own.has(u)) };
+}
+
+/**
+ * Label on a volume key: the level now and the level a press lands on, e.g. "10→12". "Now" is the
+ * quietest equalized room (that is the base every equalized room is set from); with only own-level
+ * rooms it is their average.
+ */
+function volumeLabel(s: VolumeSettings, uuids: string[]): string {
+  const { equalized } = volumeGroups(s, uuids);
+  const levels = equalized.map((u) => sonos.volume.get(u)).filter((v): v is number => typeof v === "number");
+  const now = levels.length > 0 ? Math.min(...levels) : averageVolume(uuids);
+  const delta = (s.direction ?? "up") === "down" ? -stepOf(s) : stepOf(s);
+  const target = Math.max(0, Math.min(100, now + delta));
+  return `${now}→${target}`;
+}
+
+async function stepVolume(s: VolumeSettings, uuids: string[], delta: number): Promise<void> {
+  const { equalized, own } = volumeGroups(s, uuids);
+  await sonos.adjustVolume(equalized, own, delta);
 }
 
 @action({ UUID: "com.igorstefus.sonos.volume" })
@@ -326,8 +353,7 @@ class VolumeAction extends SonosAction<VolumeSettings> {
     const direction = s.direction ?? "up";
     const muted = uuids.length > 0 && uuids.every((u) => sonos.mute.get(u));
     const glyph: Glyph = direction === "mute" ? "mute" : direction === "down" ? "volumeDown" : "volumeUp";
-    const vol = averageVolume(uuids);
-    const subtitle = uuids.length === 0 ? undefined : muted ? "muted" : uuids.length > 1 ? `~${vol}` : `${vol}`;
+    const subtitle = uuids.length === 0 ? undefined : muted ? "muted" : volumeLabel(s, uuids);
     return { title: targetTitle(s, uuids), glyph, subtitle, bar: muted ? RED : undefined };
   }
 
@@ -343,9 +369,9 @@ class VolumeAction extends SonosAction<VolumeSettings> {
         case "mute":
           return sonos.toggleMute(uuids);
         case "down":
-          return sonos.setRelativeVolume(uuids, -stepOf(s));
+          return stepVolume(s, uuids, -stepOf(s));
         default:
-          return sonos.setRelativeVolume(uuids, stepOf(s));
+          return stepVolume(s, uuids, stepOf(s));
       }
     });
   }
@@ -355,7 +381,7 @@ class VolumeAction extends SonosAction<VolumeSettings> {
     const s = ev.payload.settings;
     const uuids = targets(s);
     if (uuids.length === 0) return;
-    await this.run(ev.action, () => sonos.setRelativeVolume(uuids, ev.payload.ticks * stepOf(s)));
+    await this.run(ev.action, () => stepVolume(s, uuids, ev.payload.ticks * stepOf(s)));
   }
 
   override async onDialDown(ev: DialDownEvent<VolumeSettings>): Promise<void> {
